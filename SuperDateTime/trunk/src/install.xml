@@ -13,6 +13,6 @@
         <targetApplication>
   	        <id>SlimServer</id>
                 <minVersion>7.4</minVersion>
-                <maxVersion>7.6+</maxVersion>
+                <maxVersion>7.*</maxVersion>
         </targetApplication>
 </extension>
