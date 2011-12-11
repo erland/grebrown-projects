@@ -284,7 +284,7 @@ my %hashDisp;
 #
 my %Codepage = ( ' ' =>  0, '1' =>  1, '2' =>  2, '3' =>  3, '4' =>  4,
                  '5' =>  5, '6' =>  6, '7' =>  7, '8' =>  8, '9' =>  9,
-                 '0' => 10, '-' => 11, 'Â°' => 12, '.' => 13, '%' => 14,
+                 '0' => 10, '-' => 11, '°' => 12, '.' => 13, '%' => 14,
                  'A' => 15, 'B' => 16, 'C' => 17, 'D' => 18, 'E' => 19,
                  'F' => 20, 'G' => 21, 'H' => 22, 'I' => 23, 'J' => 24,
                  'K' => 25, 'L' => 26, 'M' => 27, 'N' => 28, 'O' => 29,
@@ -2140,7 +2140,7 @@ sub sdt10day {
 #			'icon-id' => 'plugins/SuperDateTime/html/images/'.$wetData{'d'.$i}{'forecastIcon'}.'_52x52_p.gif',
 			'icon-id' => 'plugins/SuperDateTime/html/images/'.$wetData{'d'.$i}{'forecastIcon'}.'.png',
 			text => $wetData{'d'.$i}{'day'}. '. '. $wetData{'d'.$i}{'date'}."\n".
-				$wetData{'d'.$i}{'high'.$ForC} . 'Â°/' .$wetData{'d'.$i}{'low'.$ForC} . 'Â° Precip. ' . $wetData{'d'.$i}{'precip'} . "\n".
+				$wetData{'d'.$i}{'high'.$ForC} . '°/' .$wetData{'d'.$i}{'low'.$ForC} . '° Precip. ' . $wetData{'d'.$i}{'precip'} . "\n".
 				$wetData{'d'.$i}{'condition'},
 		};
 
@@ -2266,7 +2266,7 @@ sub sdtForecast {
 			#'icon-id' => 'plugins/SuperDateTime/html/images/'.$wetData{$i}{'forecastIcon'}.'_52x52_p.gif',
 			'icon-id' => 'plugins/SuperDateTime/html/images/'.$wetData{$i}{'forecastIcon'}.'.png',
 			text => $wetData{$i}{'forecastTOD'}."\n".
-				$wetData{$i}{'forecastType'} .' '. $wetData{$i}{'forecastTemp'.$ForC} . 'Â° Precip. '. $wetData{$i}{'forecastPrec'} . "\n".
+				$wetData{$i}{'forecastType'} .' '. $wetData{$i}{'forecastTemp'.$ForC} . '° Precip. '. $wetData{$i}{'forecastPrec'} . "\n".
 				$wetData{$i}{'skyCondition'},
          		actions  => {
          			  go  => {
@@ -2350,12 +2350,12 @@ sub sdtCurrent {
 	push @menu, {
 		#'icon-id' => 'plugins/SuperDateTime/html/images/'.$wetData{-1}{'forecastIcon'}.'_52x52_p.gif',
 		'icon-id' => 'plugins/SuperDateTime/html/images/'.$wetData{-1}{'forecastIcon'}.'.png',
-			  text => "$wetData{'temperature'.$ForC}Â°($wetData{'feelslike'.$ForC}Â°) $wetData{'windspeed_'.$WindUnit}"."\n".
-						"$wetData{-1}{'forecastType'} $wetData{-1}{'forecastTemp'.$ForC}Â° Precip. $wetData{-1}{'forecastPrec'}" . "\n".
+			  text => "$wetData{'temperature'.$ForC}°($wetData{'feelslike'.$ForC}°) $wetData{'windspeed_'.$WindUnit}"."\n".
+						"$wetData{-1}{'forecastType'} $wetData{-1}{'forecastTemp'.$ForC}° Precip. $wetData{-1}{'forecastPrec'}" . "\n".
 						$wetData{-1}{'skyCondition'}."\n".
 						"Humidity: $wetData{'humidity'}"."\n".
 						"Pressure: $wetData{'pressureIN'}$wetData{'pressureT'}"."\n".
-						"Dewpoint: $wetData{'dewpointF'}Â°",
+						"Dewpoint: $wetData{'dewpointF'}°",
          actions  => {
            go  => {
                player => 0,
@@ -2853,15 +2853,15 @@ sub replaceMacros {
 		my $date = $client->longDateF();
 		s/%2/$date/;
 		
-		s/%t/$wetData{'temperatureF'}Â°/;
-		s/%T/$wetData{'temperatureC'}Â°/;
+		s/%t/$wetData{'temperatureF'}°/;
+		s/%T/$wetData{'temperatureC'}°/;
 		s/%h/$wetData{'humidity'}/;
 		s/%p/$wetData{'pressureIN'}$wetData{'pressureT'}/;
 		s/%P/$wetData{'pressureMB'}$wetData{'pressureT'}/;
-		s/%d/$wetData{'dewpointF'}Â°/;
-		s/%D/$wetData{'dewpointC'}Â°/;
-		s/%f/$wetData{'feelslikeF'}Â°/;
-		s/%F/$wetData{'feelslikeC'}Â°/;
+		s/%d/$wetData{'dewpointF'}°/;
+		s/%D/$wetData{'dewpointC'}°/;
+		s/%f/$wetData{'feelslikeF'}°/;
+		s/%F/$wetData{'feelslikeC'}°/;
 		s/%w/$wetData{'windspeed_mh'}/;
 		s/%W/$wetData{'windspeed_kh'}/;
 		s/%q/$wetData{'windspeed_kth'}/;
@@ -2872,13 +2872,13 @@ sub replaceMacros {
 		s/%B/$wetData{'snow'}/;
 
 		#Wunderground
-		s/%e/$wetData{'wu_temperatureF'}Â°/;
-		s/%E/$wetData{'wu_temperatureC'}Â°/;
+		s/%e/$wetData{'wu_temperatureF'}°/;
+		s/%E/$wetData{'wu_temperatureC'}°/;
 		s/%H/$wetData{'wu_humidity'}/;
 		s/%l/$wetData{'wu_pressureIN'}/;
 		s/%L/$wetData{'wu_pressureMB'}/;
-		s/%m/$wetData{'wu_dewpointF'}Â°/;
-		s/%M/$wetData{'wu_dewpointC'}Â°/;
+		s/%m/$wetData{'wu_dewpointF'}°/;
+		s/%M/$wetData{'wu_dewpointC'}°/;
 		s/%j/$wetData{'wu_windspeed_mh'}/;
 		s/%J/$wetData{'wu_windspeed_kh'}/;
 		s/%k/$wetData{'wu_windspeed_kth'}/;
@@ -2896,16 +2896,16 @@ sub replaceMacrosPer {
 	$string = replaceMacros($string, $client);
 
 	for ($string) {
-		s/%a/$wetData{$location}{'average_F'}Â°/;
-		s/%A/$wetData{$location}{'average_C'}Â°/;
-		s/%c/$wetData{$location}{'record_F'}Â°/;
-		s/%C/$wetData{$location}{'record_C'}Â°/;
+		s/%a/$wetData{$location}{'average_F'}°/;
+		s/%A/$wetData{$location}{'average_C'}°/;
+		s/%c/$wetData{$location}{'record_F'}°/;
+		s/%C/$wetData{$location}{'record_C'}°/;
 		s/%g/$wetData{$location}{'record_year'}/;
 		s/%s/$wetData{$location}{'sunrise'}/;
 		s/%S/$wetData{$location}{'sunset'}/;
 
-		s/%z/$wetData{$location}{'forecastType'} $wetData{$location}{'forecastTempF'}Â°/;
-		s/%Z/$wetData{$location}{'forecastType'} $wetData{$location}{'forecastTempC'}Â°/;
+		s/%z/$wetData{$location}{'forecastType'} $wetData{$location}{'forecastTempF'}°/;
+		s/%Z/$wetData{$location}{'forecastType'} $wetData{$location}{'forecastTempC'}°/;
 		s/Low/ Low/;
 
 		s/%x/$wetData{$location}{'forecastPrec'}/;
@@ -2922,10 +2922,10 @@ sub replaceMacrosPer {
 		#10day stuff
 		s/%_3/$wetData{$location}{'day'}/;
 		s/%_4/$wetData{$location}{'date'}/;
-		s/%_5/$wetData{$location}{'highF'}Â°/;
-		s/%_6/$wetData{$location}{'highC'}Â°/;
-		s/%_7/$wetData{$location}{'lowF'}Â°/;
-		s/%_8/$wetData{$location}{'lowC'}Â°/;
+		s/%_5/$wetData{$location}{'highF'}°/;
+		s/%_6/$wetData{$location}{'highC'}°/;
+		s/%_7/$wetData{$location}{'lowF'}°/;
+		s/%_8/$wetData{$location}{'lowC'}°/;
 		s/%_9/$wetData{$location}{'precip'}/;
 		s/%_0/$wetData{$location}{'condition'}/;
 	}		
@@ -5385,7 +5385,7 @@ sub localizeLongWeather {
 			
 		#Temperature will either be a specific number (50F) or a group (50s)
 		if ($3 eq 'F') {
-			$tempSymbol = 'Â°';
+			$tempSymbol = '°';
 		}
 		else {
 			$tempSymbol = 's';
