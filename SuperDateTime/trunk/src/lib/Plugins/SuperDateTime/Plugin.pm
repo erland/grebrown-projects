@@ -18,6 +18,7 @@
 # The graphical weather icons and the code to support them are based on the WeatherTime screensaver written by Martin Rehfeld.
 #
 # VERSION HISTORY
+# 5.9.10 01/21/11  Added macro options to round WUnderground temperature data.
 # 5.9.9  11/30/11  Moved to Google Code repository (Thanks Erland).  Fixed wunderground (Thanks BoomX2).  Changed plugin max version.
 # 5.9.8  06/18/11  Fixed weather parsing.  Thanks for everyone's patience.
 # 5.9.7  04/16/11  Added stuck monitor.
@@ -192,7 +193,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 });
 
 use vars qw($VERSION);
-$VERSION = substr(q$Revision: 5.9.8 $,10);
+$VERSION = substr(q$Revision: 5.9.10 $,10);
 
 $Plugins::SuperDateTime::Plugin::apiVersion = 2.0;
 
@@ -2760,8 +2761,8 @@ sub drawEach {
 	
 	$log->debug("Drawing scrn $destLoc $client $period");
 	
-	my	@show1icon  = @{ $prefs->client($client)->get('show1icon') || [] };
-	my	@show13line = @{ $prefs->client($client)->get('show13line') || [] };
+	my @show1icon  = @{ $prefs->client($client)->get('show1icon') || [] };
+	my @show13line = @{ $prefs->client($client)->get('show13line') || [] };
 	my @d3line1t   = @{ $prefs->client($client)->get('v3line1t') || [] };
 	my @d3line1m   = @{ $prefs->client($client)->get('v3line1m') || [] };
 	my @d3line1b   = @{ $prefs->client($client)->get('v3line1b') || [] };
@@ -2788,19 +2789,14 @@ sub drawEach {
 	
 		#Shorten HI/HIGH/LOW/Lo to gain screen real estate on Booms
 		if($client->display->isa('Slim::Display::Boom')) {
-			$line1 =~ s/^ Low/LO/;
-			$line1 =~ s/^Low/LO/;
-			$line1 =~ s/^High/HI/;
+			$line1 =~ s/^ LOW/LO/;
+			$line1 =~ s/^HIGH/HI/;
 			$line1 =~ s/^PREC/PR/;
-			$line2 =~ s/^ Low/LO/;
-			$line2 =~ s/^Low/LO/;
-			$line2 =~ s/^High/HI/;
+			$line2 =~ s/^ LOW/LO/;
+			$line2 =~ s/^HIGH/HI/;
 			$line2 =~ s/^PREC/PR/;
-			$line3 =~ s/^ Low/LO/;
-			$line3 =~ s/^Low/LO/;
-			$line3 =~ s/^High/HI/;
-			$line3 =~ s/^PREC/PR/;
 			$line3 =~ s/^ LOW/LO/;
+			$line3 =~ s/^PREC/PR/;
 			$line3 =~ s/^HIGH/HI/;
 		}
 	
@@ -2873,7 +2869,9 @@ sub replaceMacros {
 
 		#Wunderground
 		s/%e/$wetData{'wu_temperatureF'}°/;
+		s/%r/$wetData{'wu_temperatureFr'}°/;
 		s/%E/$wetData{'wu_temperatureC'}°/;
+		s/%R/$wetData{'wu_temperatureCr'}°/;
 		s/%H/$wetData{'wu_humidity'}/;
 		s/%l/$wetData{'wu_pressureIN'}/;
 		s/%L/$wetData{'wu_pressureMB'}/;
@@ -3636,13 +3634,17 @@ sub gotWunderground {  #Weather data was received
 	if($ary[scalar(@ary)-2] =~ /^20\d\d-.*?,(.*?),(.*?),(.*?),(.*?),.*?,(.*?),.*?,(.*?),.*?,(.*?),(.*?),.*,/) {
 		if ($metric) {
 			$wetData{'wu_temperatureF'} = CtoF($1);
+			$wetData{'wu_temperatureFr'} = int($wetData{'wu_temperatureF'} + .5 * ($wetData{'wu_temperatureF'} <=> 0)); #Funky round
 			$wetData{'wu_temperatureC'} = $1; 
+			$wetData{'wu_temperatureCr'} = int($wetData{'wu_temperatureC'} + .5 * ($wetData{'wu_temperatureC'} <=> 0)); #Funky round
 			$wetData{'wu_dewpointF'} = CtoF($2);
 			$wetData{'wu_dewpointC'} = $2;
 		}
 		else {
 			$wetData{'wu_temperatureF'} = $1;
+			$wetData{'wu_temperatureFr'} = int($wetData{'wu_temperatureF'} + .5 * ($wetData{'wu_temperatureF'} <=> 0)); #Funky round
 			$wetData{'wu_temperatureC'} = FtoC($1); 
+			$wetData{'wu_temperatureCr'} = int($wetData{'wu_temperatureC'} + .5 * ($wetData{'wu_temperatureC'} <=> 0)); #Funky round
 			$wetData{'wu_dewpointF'} = $2;
 			$wetData{'wu_dewpointC'} = FtoC($2);	
 		}
