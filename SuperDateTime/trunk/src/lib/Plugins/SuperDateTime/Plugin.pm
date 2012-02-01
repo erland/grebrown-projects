@@ -18,7 +18,7 @@
 # The graphical weather icons and the code to support them are based on the WeatherTime screensaver written by Martin Rehfeld.
 #
 # VERSION HISTORY
-# 5.9.11 01/30/11  Fixed NCAA basketball parsing.  Thanks BoomX2.
+# 5.9.12 02/01/11  Fixed NCAA basketball parsing.  Thanks BoomX2.
 # 5.9.10 01/21/11  Added macro options to round WUnderground temperature data.
 # 5.9.9  11/30/11  Moved to Google Code repository (Thanks Erland).  Fixed wunderground (Thanks BoomX2).  Changed plugin max version.
 # 5.9.8  06/18/11  Fixed weather parsing.  Thanks for everyone's patience.
@@ -194,7 +194,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 });
 
 use vars qw($VERSION);
-$VERSION = substr(q$Revision: 5.9.11 $,10);
+$VERSION = substr(q$Revision: 5.9.12 $,10);
 
 $Plugins::SuperDateTime::Plugin::apiVersion = 2.0;
 
@@ -4786,15 +4786,15 @@ sub gotNBA {
 		my @outcome = $game_div->look_down( "_tag", "li", "id", qr{statusLine1} );
 		my @qtr     = $game_div->look_down( "_tag", "span", "id", qr{statusLine2Left} );
 		my @clock   = $game_div->look_down( "_tag", "span", "id", qr{statusLine2Right} );
-		my @teams   = $game_div->look_down( "_tag", "div", "id", qr{(h|a)TeamName} );
+		my @teams   = $game_div->look_down( "_tag", "a", "href", qr{clubhouse\?} );
 		my @scores  = $game_div->look_down( "_tag", "span", "id", qr{(home|away)HeaderScore} );
 
 		if ( (scalar (@outcome) > 0) && (scalar (@clock) > 0) && (scalar (@teams) > 0) && (scalar (@scores) > 0) && (scalar (@qtr) > 0) ) { #Make sure we got some good HTML to play with		
 			my( $outcome_txt ) = $outcome[ 0 ]->content_list;
 			my( $qtr_txt )     = $qtr[ 0 ]->content_list;
 			my( $clock_time )  = $clock[ 0 ]->content_list;
-			my( $away_team )   = $teams[ 0 ]->as_text;
-			my( $home_team )   = $teams[ 1 ]->as_text;
+			my( $away_team )   = $teams[ 0 ]->content_list;
+			my( $home_team )   = $teams[ 1 ]->content_list;
 			my( $away_score )  = $scores[ 0 ]->content_list;
 			my( $home_score )  = $scores[ 1 ]->content_list;
 
@@ -4935,14 +4935,14 @@ sub gotCBB {
 		my @outcome = $game_div->look_down( "_tag", "li", "id", qr{statusLine1} );
 		my @qtr     = $game_div->look_down( "_tag", "span", "id", qr{statusLine2Left} );
 		my @clock   = $game_div->look_down( "_tag", "span", "id", qr{statusLine2Right} );
-		my @teams   = $game_div->look_down( "_tag", "a", "href", qr{clubhouse\?} );
+		my @teams   = $game_div->look_down( "_tag", "div", "id", qr{(h|a)TeamName} );
 		my @scores  = $game_div->look_down( "_tag", "span", "id", qr{(home|away)HeaderScore} );
 			
 		my( $outcome_txt ) = $outcome[ 0 ]->content_list;
 		my( $qtr_txt )     = $qtr[ 0 ]->content_list;
 		my( $clock_time )  = $clock[ 0 ]->content_list;
-		my( $away_team )   = $teams[ 0 ]->content_list;
-		my( $home_team )   = $teams[ 1 ]->content_list;
+		my( $away_team )   = $teams[ 0 ]->as_text;
+		my( $home_team )   = $teams[ 1 ]->as_text;
 		my( $away_score )  = $scores[ 0 ]->content_list;
 		my( $home_score )  = $scores[ 1 ]->content_list;
 	
