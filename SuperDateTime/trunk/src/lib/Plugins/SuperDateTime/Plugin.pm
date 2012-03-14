@@ -18,8 +18,9 @@
 # The graphical weather icons and the code to support them are based on the WeatherTime screensaver written by Martin Rehfeld.
 #
 # VERSION HISTORY
-# 5.9.12 02/01/11  Fixed NCAA basketball parsing.  Thanks BoomX2.
-# 5.9.10 01/21/11  Added macro options to round WUnderground temperature data.
+# 5.9.13 03/14/12  Fixed NCAA basketball parsing.  Thanks again BoomX2.
+# 5.9.12 02/01/12  Fixed NCAA basketball parsing.  Thanks BoomX2.
+# 5.9.10 01/21/12  Added macro options to round WUnderground temperature data.
 # 5.9.9  11/30/11  Moved to Google Code repository (Thanks Erland).  Fixed wunderground (Thanks BoomX2).  Changed plugin max version.
 # 5.9.8  06/18/11  Fixed weather parsing.  Thanks for everyone's patience.
 # 5.9.7  04/16/11  Added stuck monitor.
@@ -194,7 +195,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 });
 
 use vars qw($VERSION);
-$VERSION = substr(q$Revision: 5.9.12 $,10);
+$VERSION = substr(q$Revision: 5.9.13 $,10);
 
 $Plugins::SuperDateTime::Plugin::apiVersion = 2.0;
 
@@ -4929,16 +4930,15 @@ sub gotCBB {
 	my @game_divs = $tree->look_down( "_tag", "div", "class", "mod-content" );
 	
 	for my $game_div ( @game_divs ) {
-	
-		next unless $game_div->look_down( "_tag", "div", "id", qr{gameHeader} );
-	
-		my @outcome = $game_div->look_down( "_tag", "li", "id", qr{statusLine1} );
-		my @qtr     = $game_div->look_down( "_tag", "span", "id", qr{statusLine2Left} );
-		my @clock   = $game_div->look_down( "_tag", "span", "id", qr{statusLine2Right} );
-		my @teams   = $game_div->look_down( "_tag", "div", "id", qr{(h|a)TeamName} );
-		my @scores  = $game_div->look_down( "_tag", "span", "id", qr{(home|away)HeaderScore} );
+		next unless $game_div->look_down( "_tag", "div", "class", "game-header" );
+
+		my @outcome = $game_div->look_down( "_tag", "div", "id", qr{statusLine2Left} );
+		my @qtr     = $game_div->look_down( "_tag", "p", "id", qr{statusLine1} );
+		my @clock   = $game_div->look_down( "_tag", "p", "id", qr{statusLine1} );
+		my @teams   = $game_div->look_down( "_tag", "span", "id", qr{(h|a)TeamName} );
+		my @scores  = $game_div->look_down( "_tag", "li", "id", qr{(home|away)HeaderScore} );
 			
-		my( $outcome_txt ) = $outcome[ 0 ]->content_list;
+		my( $outcome_txt ) = $outcome[ 0 ]->as_text;
 		my( $qtr_txt )     = $qtr[ 0 ]->content_list;
 		my( $clock_time )  = $clock[ 0 ]->content_list;
 		my( $away_team )   = $teams[ 0 ]->as_text;
@@ -4954,7 +4954,7 @@ sub gotCBB {
 			unless defined $clock_time && $clock_time =~ /\d/;
 	
 		if( $clock_time ne '' ) {
-			$clock_time = "$clock_time $qtr_txt";
+			$clock_time = "$clock_time";
 		} elsif( $outcome_txt =~ /final/i ) {
 			$clock_time = $outcome_txt;
 		} else {
@@ -4964,16 +4964,16 @@ sub gotCBB {
 		$sportsData{'College Basketball'}{$home_team.$clock_time}{'homeTeam'}  =$home_team;
 		$sportsData{'College Basketball'}{$home_team.$clock_time}{'awayTeam'}  =$away_team;
 			
-		#Check to see if home score is a numeric, otherwise there isn't a score yet and set to blanks
-		if( $home_score =~ /^\d/ ) {
-			$sportsData{'College Basketball'}{$home_team.$clock_time}{'homeScore'} = $home_score;
-			$sportsData{'College Basketball'}{$home_team.$clock_time}{'awayScore'} = $away_score;
-		}
-		else {
+		#Check to see if clock reflects future game time, if so there isn't a score yet and set to blanks
+		if( $clock_time =~ /ET/ ) {
 			$sportsData{'College Basketball'}{$home_team.$clock_time}{'homeScore'} = '';
 			$sportsData{'College Basketball'}{$home_team.$clock_time}{'awayScore'} = '';
 			$home_score = '';
 			$away_score = '';
+		}
+		else {
+			$sportsData{'College Basketball'}{$home_team.$clock_time}{'homeScore'} = $home_score;
+			$sportsData{'College Basketball'}{$home_team.$clock_time}{'awayScore'} = $away_score;
 		}
 				
 		$sportsData{'College Basketball'}{$home_team.$clock_time}{'gameTime'}  =convertTime($clock_time);
