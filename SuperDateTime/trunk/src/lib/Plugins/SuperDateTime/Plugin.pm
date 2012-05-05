@@ -244,18 +244,20 @@ my %sportsData = (); 	#Stores all sport info for use from jive interface
 my %averages = ('last' => ''); #Used to store raw averages data and when they were last refreshed
 
 #Used to store pointers to the data providers
-my %providers =  ('1'  => \&get10day,
+my %providers =  ('1'  => \&getWeatherToday,
                   '2'  => \&getLongWeatherTxt,
-		  '3'  => \&getAverages,
+		  '3'  => \&get10day,
                   '4'  => \&getWunderground,
                   '5'  => \&getMLB,
                   '6'  => \&getNFL,
                   '7'  => \&getNBA,
                   '8'  => \&getNHL,
                   '9'  => \&getCBB,                  
-                  '10'  => \&getCFB,
+                  '10' => \&getCFB,
                   '11' => \&getStocks,
-                  '12' => \&getLongWeather);
+                  '12' => \&getLongWeather,
+                  '13' => \&getWeatherTomorrow,
+                  '14' => \&getAverages);
 
 my @WETdisplayItems1 = ();
 my @WETdisplayItems2 = ();
@@ -2484,7 +2486,6 @@ sub CtoF {
 	return $temp;
 }
 
-
 sub getAverages {  #Set up Async HTTP request for averages
 	my ($days_advance, $client, $refreshItem) = @_;
 
@@ -2492,7 +2493,7 @@ sub getAverages {  #Set up Async HTTP request for averages
 		$days_advance = 0;
 	}
 
-	if ($wetData{'1'}{'forecastTOD'} ne $averages{'last'}) { #See if the averages & 10day need to be refreshed due to a period change    
+	if ($wetData{'0'}{'forecastTOD'} ne $averages{'last'}) { #See if the averages need to be refreshed due to a period change    
 		my $dayNum = "";
 		if ($days_advance > 0) {
 			$dayNum = "?dayNum=$days_advance";
@@ -2509,7 +2510,7 @@ sub getAverages {  #Set up Async HTTP request for averages
 								 refreshItem => $refreshItem});
 
 		$log->info("async request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)',
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0',
 			'Accept-Language' => 'en-us,en;q=0.5',
 			'Accept' => 'text/html',
 			'Accept-Charset' => 'UTF-8');
@@ -2666,7 +2667,7 @@ sub gotAverages {  #Average data was received
 			}
 		}
 	
-		$averages{'last'} = $wetData{'1'}{'forecastTOD'}; #update last average update indicator
+		$averages{'last'} = $wetData{'0'}{'forecastTOD'}; #update last average update indicator
 		refreshData(undef, $client, $refreshItem);
 	}
 }
@@ -2677,7 +2678,7 @@ sub getLongWeatherTxt {  #Set up Async HTTP request for long weather forecasts
 	my $refreshItem = shift;
 
 	#Using the averages last updated reference, I suppose if averages fails this will keep refreshing or if this fails it wont know to refresh...
-	if ($wetData{'1'}{'forecastTOD'} ne $averages{'last'}) { #See if the averages & 10day need to be refreshed due to a period change    
+	if ($wetData{'0'}{'forecastTOD'} ne $averages{'last'}) { #See if the averages & 10day need to be refreshed due to a period change    
 		my $url = 'http://www.weather.com/outlook/travel/businesstraveler/narrative/' . $prefs->get('city');
 
   		my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotLongWeatherTxt,
@@ -2687,7 +2688,7 @@ sub getLongWeatherTxt {  #Set up Async HTTP request for long weather forecasts
 								 refreshItem => $refreshItem});
 
 		$log->info("async request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 	}
 	else {
 		$log->debug("Skipping long weather...");
@@ -2793,11 +2794,14 @@ sub drawEach {
 		if($client->display->isa('Slim::Display::Boom')) {
 			$line1 =~ s/^ LOW/LO/;
 			$line1 =~ s/^HIGH/HI/;
+			$line1 =~ s/^RAIN/RN/;
 			$line1 =~ s/^PREC/PR/;
 			$line2 =~ s/^ LOW/LO/;
 			$line2 =~ s/^HIGH/HI/;
+			$line2 =~ s/^RAIN/RN/;
 			$line2 =~ s/^PREC/PR/;
 			$line3 =~ s/^ LOW/LO/;
+			$line3 =~ s/^RAIN/RN/;
 			$line3 =~ s/^PREC/PR/;
 			$line3 =~ s/^HIGH/HI/;
 		}
@@ -2910,14 +2914,14 @@ sub replaceMacrosPer {
 
 		s/%x/$wetData{$location}{'forecastPrec'}/;
 		
-		if ($location != -1) { #Make sure it's not a special "currently" case
+		#if ($location != -1) { #Make sure it's not a special "currently" case
 			s/%y/$wetData{$location}{'forecastTOD'}/;
 			s/%v/$wetData{$location}{'skyCondition'}/;
-		}
-		else { #Current conditions
-			s/%y/Currently/;
-			s/%v/$wetData{'-1'}{'skyCondition'}/;		
-		}
+		#}
+		#else { #Current conditions
+		#	s/%y/Currently/;
+		#	s/%v/$wetData{'-1'}{'skyCondition'}/;		
+		#}
 		
 		#10day stuff
 		s/%_3/$wetData{$location}{'day'}/;
@@ -2947,7 +2951,7 @@ sub getWeatherToday {  #Set up Async HTTP request for Weather
 							   refreshItem => $refreshItem});
 	$log->info("async request: $url");
 	
-	$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)',
+	$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0',
 	'Accept-Language' => 'en-us,en;q=0.5',
 	'Accept' => 'text/html',
 	'Accept-Charset' => 'UTF-8');
@@ -2971,7 +2975,7 @@ sub gotWeatherToday {  #Weather data for today was received
 		
 	my $outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-details"))[0];
 	if ($outcome_txt) {
-		if ($outcome_txt->as_text =~ m/Chance of Precip:(.*%)W/) {
+		if ($outcome_txt->as_text =~ m/Chance of \w+:(.*%)W/) {
 			$wetData{-1}{'forecastPrec'} = $1;
 			$wetData{0}{'forecastPrec'} = $1;
 		}
@@ -2985,10 +2989,9 @@ sub gotWeatherToday {  #Weather data for today was received
 		$log->warn('Error parsing current/today precip');
 	}
 
-	my $outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-temp"))[0];
+	$outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-temp"))[0];
 	if ($outcome_txt) {
-		$log->error($outcome_txt->as_text);
-		if ($outcome_txt->as_text =~ m/(\d+)°(.*)/) {
+		if ($outcome_txt->as_HTML =~ m/wx-temp\">\s?(\d+)<.*wx-label\">(\w+)<\/span>/) {
 			$wetData{-1}{'forecastTempF'} = $1;
 			$wetData{0}{'forecastTempF'} = $1;
 			$wetData{-1}{'forecastType'} = $2;
@@ -3006,6 +3009,233 @@ sub gotWeatherToday {  #Weather data for today was received
 		$log->warn('Error parsing current/today hi/low');
 	}
 
+	$outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-12hr-titlewrap"))[0];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_HTML =~ m/titlewrap\"><h3>(\w+)\s?<span/) {
+			$wetData{0}{'forecastTOD'} = 'TO' . $1;
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing today title');			
+		}
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing current/today title');
+	}
+
+	#note the extra trailing space...
+	my $outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-phrase "))[0];
+	if ($outcome_txt) {
+		$wetData{0}{'skyCondition'} = $outcome_txt->as_text;
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing today sky conditions');
+	}
+
+	$outcome_txt = ($tree->look_down( "_tag", "img", "class", "wx-weather-icon"))[0];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_HTML =~ m/(\d+).png/) {
+			$wetData{0}{'forecastIcon'} = $1;
+			$wetData{0}{'forecastIconURLSmall'} = '/plugins/SuperDateTime/html/images/' . $1 . '.png';
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing today weather icon');			
+		}
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing today weather icon');	
+	}
+
+
+	$tree = $tree->delete;
+
+	refreshData(undef, $client, $refreshItem);
+}
+
+sub getWeatherTomorrow {  #Set up Async HTTP request for Weather
+	my $timerObj = shift; #Should be undef
+	my $client = shift;
+	my $refreshItem = shift;
+
+	my $url = 'http://www.weather.com/weather/tomorrow/' . $prefs->get('city');
+	my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotWeatherTomorrow,
+							  \&gotErrorViaHTTP,
+							  {caller => 'getWeatherTomorrow',
+							   callerProc => \&getWeatherTomorrow,
+							   client => $client,
+							   refreshItem => $refreshItem});
+	$log->info("async request: $url");
+	
+	$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0',
+	'Accept-Language' => 'en-us,en;q=0.5',
+	'Accept' => 'text/html',
+	'Accept-Charset' => 'UTF-8');
+}
+
+sub gotWeatherTomorrow {  #Weather data for tomorrow was received
+	my $http = shift;
+	
+	my $params = $http->params();
+	my $client = $params->{'client'};
+	my $refreshItem = $params->{'refreshItem'};
+
+	$log->info("got " . $http->url());
+	#$::d_plugins && msg("SuperDateTime: content type is " . $http->headers()->{'Content-Type'} . "\n");
+
+	my $content = $http->content();
+
+	my $tree = HTML::TreeBuilder->new; # empty tree
+	$tree->parse($content);
+	$tree->eof();
+		
+	my $outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-details"))[0];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_text =~ m/Chance of \w+:(.*%)W/) {
+			$wetData{1}{'forecastPrec'} = $1;
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing tomorrow 1 precip');			
+		}
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing tomorrow 1 precip');
+	}
+
+	$outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-temp"))[0];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_HTML =~ m/wx-temp\">\s?(\d+)<.*wx-label\">(\w+)<\/span>/) {
+			$wetData{1}{'forecastTempF'} = $1;
+			$wetData{1}{'forecastType'} = $2;
+			$wetData{1}{'forecastTempC'} = FtoC($1);
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing tomorrow 1 hi/low');			
+		}
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing tomorrow 1 hi/low');
+	}
+
+	#$outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-12hr-titlewrap"))[0];
+	#if ($outcome_txt) {
+	#	if ($outcome_txt->as_HTML =~ m/titlewrap\"><h3>(\w+)\s?<span/) {
+	#		$wetData{1}{'forecastTOD'} = 'TOMORROW ' . $1;
+	#	}
+	#	else {
+	#		$status = '-';
+	#		$log->warn('Error parsing tomorrow 1 title');			
+	#	}
+	#}
+	#else {
+	#	$status = '-';
+	#	$log->warn('Error parsing tomorrow 1 title');
+	#}
+	# For now lets assume it's always tomorrow and tomorrow night
+	$wetData{1}{'forecastTOD'} = 'TOMORROW';
+
+	#note the extra trailing space...
+	my $outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-phrase "))[0];
+	if ($outcome_txt) {
+		$wetData{1}{'skyCondition'} = $outcome_txt->as_text;
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing tomorrow 1 sky conditions');
+	}
+
+	$outcome_txt = ($tree->look_down( "_tag", "img", "class", "wx-weather-icon"))[0];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_HTML =~ m/(\d+).png/) {
+			$wetData{1}{'forecastIcon'} = $1;
+			$wetData{1}{'forecastIconURLSmall'} = '/plugins/SuperDateTime/html/images/' . $1 . '.png';
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing tomorrow 1 weather icon');			
+		}
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing tomorrow 1 weather icon');	
+	}
+
+	#------------------------------------------- Tomorrow 2.  Keep as separate code from Tomorrow 1 for flexibility?
+	$outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-details"))[1];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_text =~ m/Chance of \w+:(.*%)W/) {
+			$wetData{2}{'forecastPrec'} = $1;
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing tomorrow 2 precip');			
+		}
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing tomorrow 2 precip');
+	}
+
+	$outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-temp"))[1];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_HTML =~ m/wx-temp\">\s?(\d+)<.*wx-label\">(\w+)<\/span>/) {
+			$wetData{2}{'forecastTempF'} = $1;
+			$wetData{2}{'forecastType'} = $2;
+			$wetData{2}{'forecastTempC'} = FtoC($1);
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing tomorrow 2 hi/low');			
+		}
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing tomorrow 2 hi/low');
+	}
+
+	#$outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-12hr-titlewrap"))[1];
+	#if ($outcome_txt) {
+	#	$wetData{2}{'forecastTOD'} = 'TOMORROW ' . $outcome_txt->as_text;
+	#}
+	#else {
+	#	$status = '-';
+	#	$log->warn('Error parsing tomorrow 2 title');
+	#}
+	# For now let's assume it's always tomorrow and tomorrow night
+	$wetData{2}{'forecastTOD'} = 'TOMORROW NIGHT';
+
+	#note the extra trailing space...
+	my $outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-phrase "))[1];
+	if ($outcome_txt) {
+		$wetData{2}{'skyCondition'} = $outcome_txt->as_text;
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing tomorrow 2 sky conditions');
+	}
+
+	$outcome_txt = ($tree->look_down( "_tag", "img", "class", "wx-weather-icon"))[1];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_HTML =~ m/(\d+).png/) {
+			$wetData{2}{'forecastIcon'} = $1;
+			$wetData{2}{'forecastIconURLSmall'} = '/plugins/SuperDateTime/html/images/' . $1 . '.png';
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing tomorrow 2 weather icon');			
+		}
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing tomorrow 2 weather icon');	
+	}
 
 	$tree = $tree->delete;
 
@@ -3026,7 +3256,7 @@ sub getWeatherNow {  #Set up Async HTTP request for Weather
 							   refreshItem => $refreshItem});
 	$log->info("async request: $url");
 	
-	$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)',
+	$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0',
 	'Accept-Language' => 'en-us,en;q=0.5',
 	'Accept' => 'text/html',
 	'Accept-Charset' => 'UTF-8');
@@ -3570,7 +3800,7 @@ sub gotWeatherNow {  #Weather data was received
 
 	$tree = $tree->delete;
 
-	#refreshData(undef, $client, $refreshItem);
+	refreshData(undef, $client, $refreshItem);
 }
 
 sub get10day {  #Set up Async HTTP request for 10day
@@ -3578,8 +3808,8 @@ sub get10day {  #Set up Async HTTP request for 10day
 	my $client = shift;
 	my $refreshItem = shift;
 	
-	if ($wetData{'1'}{'forecastTOD'} ne $averages{'last'}) { #See if the averages & 10day need to be refreshed due to a period change    	
-		my $url = 'http://www.weather.com/weather/print/' . $prefs->get('city');
+	if ($wetData{'0'}{'forecastTOD'} ne $averages{'last'}) { #See if the averages & 10day need to be refreshed due to a period change    	
+		my $url = 'http://www.weather.com/weather/tenday/' . $prefs->get('city');
 		my $http = Slim::Networking::SimpleAsyncHTTP->new(\&got10day,
 							  \&gotErrorViaHTTP,
 							  {caller => 'get10day',
@@ -3588,7 +3818,7 @@ sub get10day {  #Set up Async HTTP request for 10day
 							   refreshItem => $refreshItem});
 		$log->info("async request: $url");
 	
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)',
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0',
 			'Accept-Language' => 'en-us,en;q=0.5',
 			'Accept' => 'text/html',
 			'Accept-Charset' => 'UTF-8');
@@ -3611,65 +3841,104 @@ sub got10day {  #10day weather data was received
 
 	my $content = $http->content();
 	
-	#my @ary=split /FONT CLASS=blkVerdanaText10">.*<BR>.*<\/FONT><\/TD>/,$content; #break large string into day array
-   my @ary=split /\n/,$content; #break large string into array
-   
-   my $dayNum = 1;
-	for (@ary) {
-		if (/15%">(.*)<BR> (.*)<\/TD>/) {
-			$wetData{'d'.$dayNum}{'day'} = $1;
-			$wetData{'d'.$dayNum}{'date'} = $2;		
+	my $tree = HTML::TreeBuilder->new; # empty tree
+	$tree->parse($content);
+	$tree->eof();
+		
+	my $dayNum = 1;
+	while ($dayNum <10) {
+		my $outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-daypart"))[$dayNum];
+		if ($outcome_txt) {
+			if ($outcome_txt->as_HTML =~ m/<h3>(\S+)\s?<span.*label\">(.*)<\/span><\/h3>/) {
+				$wetData{'d'.$dayNum}{'day'} = $1;
+				$wetData{'d'.$dayNum}{'date'} = $2 . ' '; #extra space to help screen spacing		
+			}
+			else {
+				$status = '-';
+				$log->warn('Error parsing 10day day/date');			
+			}
 		}
-		elsif (/10%"><IMG SRC.*wxicons\/31\/(\d+).gif/) {
-			$wetData{'d'.$dayNum}{'forecastIcon'} = $1;
-			$wetData{'d'.$dayNum}{'forecastIconURLSmall'} = '/plugins/SuperDateTime/html/images/' . $1 . '.png';
+		else {
+			$status = '-';
+			$log->warn('Error parsing 10day day/date');
 		}
-		elsif (/35%">(.*)<\/TD>/) {
-			$wetData{'d'.$dayNum}{'condition'} = decode_entities($1);	
+
+		$outcome_txt = ($tree->look_down( "_tag", "img", "class", "wx-weather-icon"))[$dayNum];
+		if ($outcome_txt) {
+			if ($outcome_txt->as_HTML =~ m/(\d+).png/) {
+				$wetData{'d'.$dayNum}{'forecastIcon'} = $1;
+				$wetData{'d'.$dayNum}{'forecastIconURLSmall'} = '/plugins/SuperDateTime/html/images/' . $1 . '.png';
+			}
+			else {
+				$status = '-';
+				$log->warn('Error parsing 10day icon');			
+			}
 		}
-		elsif (/25%" ALIGN="CENTER"><B>(.*)&deg;\/(.*)&deg;/) {
-			$wetData{'d'.$dayNum}{'highF'} = $1;
-			$wetData{'d'.$dayNum}{'highC'} = FtoC($1);
-			$wetData{'d'.$dayNum}{'lowF'} = $2;
-			$wetData{'d'.$dayNum}{'lowC'} = FtoC($2);		
+		else {
+			$status = '-';
+			$log->warn('Error parsing 10day icon');
 		}
-		elsif (/25%" ALIGN="CENTER"><B>(-?\d+)&deg;</) {
-			$wetData{'d'.$dayNum}{'highF'} = $1;
-			$wetData{'d'.$dayNum}{'highC'} = FtoC($1);
-			$wetData{'d'.$dayNum}{'lowF'} = '--';
-			$wetData{'d'.$dayNum}{'lowC'} = '--';		
-		}		
-		elsif (/15%" ALIGN="CENTER">(\d+) %</) {
-			$wetData{'d'.$dayNum}{'precip'} = $1 . '%';
-			$dayNum++;
+
+		$outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-phrase"))[$dayNum];
+		if ($outcome_txt) {
+			$wetData{'d'.$dayNum}{'condition'} = decode_entities($outcome_txt->as_text);
 		}
-		elsif (/FONT CLASS="blkVerdanaText10">(.*) <BR> (.*)<\/FONT></) {
-			$wetData{'d'.$dayNum}{'day'} = $1;
-			$wetData{'d'.$dayNum}{'date'} = $2;
+		else {
+			$status = '-';
+			$log->warn('Error parsing 10day sky cond');
 		}
-		elsif (/TD (C|>).*IMG SRC.*wxicons\/31\/(\d+).gif/) {
-			$wetData{'d'.$dayNum}{'forecastIcon'} = $2;
-			$wetData{'d'.$dayNum}{'forecastIconURLSmall'} = '/plugins/SuperDateTime/html/images/' . $2 . '.png';
+
+		$outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-temp"))[$dayNum];
+		if ($outcome_txt) {
+			if ($outcome_txt->as_HTML =~ m/temp">\s?(-?\d+)/) {
+				$wetData{'d'.$dayNum}{'highF'} = $1;
+				$wetData{'d'.$dayNum}{'highC'} = FtoC($1);
+
+			}
+			else {
+				$status = '-';
+				$log->warn('Error parsing 10day high');			
+			}
 		}
-		elsif (/CLASS="blkVerdanaText10"><B>(.*)&deg;\/(.*)&deg;/) {
-			$wetData{'d'.$dayNum}{'highF'} = $1;
-			$wetData{'d'.$dayNum}{'highC'} = FtoC($1);
-			$wetData{'d'.$dayNum}{'lowF'} = $2;
-			$wetData{'d'.$dayNum}{'lowC'} = FtoC($2);
+		else {
+			$status = '-';
+			$log->warn('Error parsing 10day high');
 		}
-		elsif (/CLASS="blkVerdanaText10">(\d+) %</) {
-			$wetData{'d'.$dayNum}{'precip'} = $1 . '%';
-			$dayNum++;
-		}		
-		elsif (/CLASS="blkVerdanaText10">(.*)<\/FONT/) { #**Need to move to bottom condition
-			$wetData{'d'.$dayNum}{'condition'} = decode_entities($1);
+
+		$outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-temp-alt"))[$dayNum];
+		if ($outcome_txt) {
+			if ($outcome_txt->as_HTML =~ m/temp-alt">\s?(-?\d+)/) {
+				$wetData{'d'.$dayNum}{'lowF'} = $1;
+				$wetData{'d'.$dayNum}{'lowC'} = FtoC($1);		
+			}
+			else {
+				$status = '-';
+				$log->warn('Error parsing 10day low');			
+			}
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing 10day low');
+		}
+
+		$outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-details"))[$dayNum];
+		if ($outcome_txt) {
+			if ($outcome_txt->as_HTML =~ m/:<dd>(\d+\%)<\/dl>/) {
+				$wetData{'d'.$dayNum}{'precip'} = $1;
+			}
+			else {
+				$status = '-';
+				$log->warn('Error parsing 10day precip');
+			}
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing 10day precip');
 		}
 		
-		if ($dayNum == 11) { #Exit loop, why bother processing rest of file
-			last;
-		}
-	}
-	
+		$dayNum++;
+	}	
+   	
 	refreshData(undef, $client, $refreshItem);
 }
 
@@ -3688,7 +3957,7 @@ sub getWunderground {  #Set up Async HTTP request for Weather
 						   refreshItem => $refreshItem});
 	
 		$log->info("async request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 	}
 	else {
 		$log->debug("No wunderground.com value set.  Skipping...");
@@ -3813,7 +4082,7 @@ sub getStocks {  #Set up Async HTTP request for Stocks
 							   refreshItem => $refreshItem});
 		
 		$log->info("async request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 	}
 	else {
 		$log->debug("Skipping stocks...");
@@ -3977,7 +4246,7 @@ sub getWeatherMapList {  #Set up Async HTTP request for Weather Icon List
 							   type => $type});
 
 	$log->debug("async request: $url");
-	$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+	$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 }
 
 sub gotWeatherMapList {  #Weather icon list page was received
@@ -4067,7 +4336,7 @@ sub getWeatherMapURL {  #Set up Async HTTP request for Weather Icon List
 							   names_ref => $names_ref});
 		
 	$log->debug("async request: $url");
-	$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+	$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 }
 
 sub gotWeatherMapURL {  #Weather icon with image URL page was received
@@ -4240,8 +4509,8 @@ sub refreshPlayerSettings {
 
 	my @d3line1b = @{ $prefs->client($client)->get('v3line1b') || [] };
 	if (scalar(@d3line1b) == 0) {
-		$d3line1b[0] = 'PREC %x';
-		$d3line1b[1] = 'PREC %_9';
+		$d3line1b[0] = 'RAIN %x';
+		$d3line1b[1] = 'RAIN %_9';
 		$prefs->client($client)->set('v3line1b', \@d3line1b);
 	}
 
@@ -4364,7 +4633,6 @@ sub refreshData {
 		$newActiveGames = 0; #Reset active game flag for upcoming sports data refresh
 
 		getWeatherNow(undef, $client, $refreshItem);
-		getWeatherToday(undef, $client, $refreshItem);
 	}
 	elsif (defined $providers{$refreshItem}) { #Dynamic provider
 		$providers{$refreshItem}->(undef, $client, $refreshItem);
@@ -4527,12 +4795,12 @@ sub getMLB {  #Set up Async HTTP request for MLB
 		my $http = Slim::Networking::SimpleAsyncHTTP->new(\&gotMLB,
 								  \&gotErrorViaHTTP,
 								  {caller => 'getMLB',
-							      callerProc => \&getMLB,								  
+							      	callerProc => \&getMLB,								  
 								   client => $client,
 								   refreshItem => $refreshItem});							  
 		
 		$log->info("aync request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 	}
 	else {
 		$log->debug("Skipping MLB...");
@@ -4823,7 +5091,7 @@ sub getNBA {  #Set up Async HTTP request for NBA
 				refreshItem => $refreshItem});
 
 		$log->info("async request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 	}
 	else {
 		$log->debug("Skipping NBA...");
@@ -4973,7 +5241,7 @@ sub getCBB {  #Set up Async HTTP request for CBB
 													   refreshItem => $refreshItem});
 	
 		$log->info("async request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 	}
 		else {
 		$log->debug("Skipping CBB...");
@@ -5108,7 +5376,7 @@ sub getCFB {  #Set up Async HTTP request for college football
 											   refreshItem => $refreshItem});
 														  
 		$log->info("aync request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 	}
 	else {
 		$log->debug("Skipping CFB...");
@@ -5348,7 +5616,7 @@ sub getNHL {  #Set up Async HTTP request for NHL
 														   refreshItem => $refreshItem});
 
 		$log->info("aync request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 	}
 	else {
 		$log->debug("Skipping NHL...");
@@ -5566,7 +5834,7 @@ sub getNFL {  #Set up Async HTTP request for NFL
 												   refreshItem => $refreshItem});
 
 		$log->info("aync request: $url");
-		$http->get($url, 'User-Agent' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)');
+		$http->get($url, 'User-Agent' => 'Mozilla/5.0 (Windows NT 5.1; rv:12.0) Gecko/20100101 Firefox/12.0');
 	}
 	else {
 		$log->debug("Skipping NFL...");
