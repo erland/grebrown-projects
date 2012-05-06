@@ -1,0 +1,25 @@
+<extensions>
+   <details>
+     <title lang="EN">SuperDateTime Development Repository</title>
+   </details>
+<plugins>
+<plugin name="SuperDateTime" creator="Greg Brown" link="http://gregbrown.net/squeeze/superdatetime.htm" maxTarget="7.*" minTarget="7.4" sha="cb924e5e0c5b83c005e0973e1f9e436784562499" url="http://grebrown-projects.googlecode.com/files/SuperDateTime5.9.14A3.zip" version="5.9.14A3">
+<desc lang="EN">
+Displays local time, date, weather, sports, and stocks information.
+</desc>
+<title lang="EN">SuperDateTime</title>
+</plugin>
+<plugin name="SuperDateTime" creator="Greg Brown" link="http://gregbrown.net/squeeze/superdatetime.htm" maxTarget="7.3.3" minTarget="7.0" sha="2ef26fa887951a22e243194cafbb481c03b5e95a" url="http://gregbrown.net/squeeze/SuperDateTime/SuperDateTime5-8-7.zip" version="5.8.7">
+<desc lang="EN">
+Displays local time, date, weather, sports, and stocks information.
+</desc>
+<title lang="EN">SuperDateTime</title>
+</plugin>
+<plugin name="CTABusTracker" creator="Greg Brown" link="http://gregbrown.net/squeeze/ctabustracker.htm" maxTarget="7.6+" minTarget="7.4" sha="8106740f7735b4562977775a37d2d1126d041fd5" url="http://gregbrown.net/squeeze/CTABusTracker/CTABusTracker1-0-0.zip" version="1.0.0">
+<desc lang="EN">
+Displays CTA (Chicago Transit Authority) bus arrival times via the SuperDateTime screensaver.
+</desc>
+<title lang="EN">CTABusTracker</title>
+</plugin>
+</plugins>
+</extensions>
