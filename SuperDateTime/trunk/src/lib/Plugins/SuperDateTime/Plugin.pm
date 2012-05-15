@@ -212,6 +212,7 @@ my $status = '';  #Used for the status indicator
 my %overlay; #Used to show alarm indicator
 my $errorCount = 0; #Used to keep track of network errors
 my $activeClients = 0; #Number of players currently displaying SuperDateTime
+my $forecastNum; #Used to keep track of if today's forecast includes just today or today and tonight.  There's probably a better way to do this but this will suffice for now...
 
 #These preferences are used often so they're locally cached. Preset to default values.
 my $showtime = 7; #How long to show the time when no games are active
@@ -3015,7 +3016,7 @@ sub gotWeatherToday {  #Weather data for today was received
 	$outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-12hr-titlewrap"))[0];
 	if ($outcome_txt) {
 		if ($outcome_txt->as_HTML =~ m/titlewrap\"><h3>(\w+)\s?<span/) {
-			$wetData{0}{'forecastTOD'} = 'TO' . $1;
+			$wetData{0}{'forecastTOD'} = 'To' . $1;
 		}
 		else {
 			$status = '-';
@@ -3104,6 +3105,7 @@ sub gotWeatherToday {  #Weather data for today was received
 	#-------------------------------------------------------------------
 	my @check = $tree->look_down( "_tag", "div", "class", "wx-details");
 	if (scalar (@check) > 1) {
+		$forecastNum = 2;
 		$outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-details"))[1];
 		if ($outcome_txt) {
 			if ($outcome_txt->as_text =~ m/Chance of \w+:(.*%)W/) {
@@ -3140,7 +3142,7 @@ sub gotWeatherToday {  #Weather data for today was received
 		#$outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-12hr-titlewrap"))[1];
 		#if ($outcome_txt) {
 		#	if ($outcome_txt->as_HTML =~ m/titlewrap\"><h3>(\w+)\s?<span/) {
-		#		$wetData{1}{'forecastTOD'} = 'TO' . $1;
+		#		$wetData{1}{'forecastTOD'} = 'To' . $1;
 		#	}
 		#	else {
 		#		$status = '-';
@@ -3189,7 +3191,10 @@ sub gotWeatherToday {  #Weather data for today was received
 			$log->warn('Error parsing today 2 narrative');
 		}
 	}	
-	
+	else {
+		#Only a forcast for today
+		$forecastNum = 1;
+	}
 	
 	$tree = $tree->delete;
 
@@ -3231,16 +3236,7 @@ sub gotWeatherTomorrow {  #Weather data for tomorrow was received
 	my $tree = HTML::TreeBuilder->new; # empty tree
 	$tree->parse($content);
 	$tree->eof();
-	
-	#Figure out how many forecasts already exist
-	my $forecastNum;
-	if (defined $wetData{1}{'forecastIcon'}) {
-		$forecastNum = 2;
-	}
-	else {
-		$forecastNum = 1;
-	}
-	
+
 	my $outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-details"))[0];
 	if ($outcome_txt) {
 		if ($outcome_txt->as_text =~ m/Chance of \w+:(.*%)W/) {
@@ -3328,6 +3324,7 @@ sub gotWeatherTomorrow {  #Weather data for tomorrow was received
 
 	#------------------------------------------- Tomorrow 2.  Keep as separate code from Tomorrow 1 for flexibility?
 	$forecastNum++;
+
 	$outcome_txt = ($tree->look_down( "_tag", "div", "class", "wx-details"))[1];
 	if ($outcome_txt) {
 		if ($outcome_txt->as_text =~ m/Chance of \w+:(.*%)W/) {
