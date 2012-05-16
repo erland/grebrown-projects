@@ -3599,7 +3599,6 @@ sub gotWeatherNow {  #Weather data was received
 				$log->warn('Error parsing current pressure trend');			
 			}
 		}
-		$log->error($wetData{'pressureT'});
 	}
 	else {
 		$status = '-';
