@@ -156,7 +156,7 @@ my %nhlTeams = (
                         'Senators'     => 'Senators',
                         'Sharks'       => 'Sharks',
                         'Stars'        => 'Stars',
-                        'Thrashers'    => 'Thrashers',
+                        'Wild'         => 'Wild',
 			'0' => 'None',
 			'1' => 'All'
 );
