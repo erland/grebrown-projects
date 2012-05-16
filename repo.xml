@@ -3,7 +3,7 @@
      <title lang="EN">SuperDateTime Repository</title>
    </details>
 <plugins>
-<plugin name="SuperDateTime" creator="Greg Brown" link="http://gregbrown.net/squeeze/superdatetime.htm" maxTarget="7.*" minTarget="7.4" sha="305dd1fe70cafe8a5252c501b2485ccc3a1a7f4a" url="http://grebrown-projects.googlecode.com/files/SuperDateTime5.9.13.zip" version="5.9.13">
+<plugin name="SuperDateTime" creator="Greg Brown" link="http://gregbrown.net/squeeze/superdatetime.htm" maxTarget="7.*" minTarget="7.4" sha="3631a1a636cfcd2c4e0d81370eeca8143f41c9b9" url="http://grebrown-projects.googlecode.com/files/SuperDateTime5.9.14.zip" version="5.9.14">
 <desc lang="EN">
 Displays local time, date, weather, sports, and stocks information.
 </desc>
