@@ -18,6 +18,10 @@
 # The graphical weather icons and the code to support them are based on the WeatherTime screensaver written by Martin Rehfeld.
 #
 # VERSION HISTORY
+# 5.9.14 05/15/12  Fixed weather.com parsing for most data elements.
+#                  Updated German translations.
+#                  Replaced NHL Thrashers with Wild.
+#                  Fixed PayPal donation link from plugin settings page.  Wink wink.
 # 5.9.13 03/14/12  Fixed NCAA basketball parsing.  Thanks again BoomX2.
 # 5.9.12 02/01/12  Fixed NCAA basketball parsing.  Thanks BoomX2.
 # 5.9.10 01/21/12  Added macro options to round WUnderground temperature data.
