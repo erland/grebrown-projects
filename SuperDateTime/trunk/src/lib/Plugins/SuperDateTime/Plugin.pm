@@ -3561,6 +3561,47 @@ sub gotWeatherNow {  #Weather data was received
 		$log->warn('Error parsing current dew point');	
 	}
 
+	$outcome_txt = ($tree->look_down( "_tag", "span", "itemprop", "barometric-pressure-incheshg"))[0];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_text =~ m/(\d+\.\d+)/) {
+			$wetData{'pressureIN'} = $1;
+			$wetData{'pressureMB'} = $1 * 33.8639;
+			$wetData{'pressureMB'} = int($wetData{'pressureMB'} + .5 * ($wetData{'pressureMB'} <=> 0)); #Funky round			
+		}
+		else {
+			$status = '-';
+			$log->warn('Error parsing current pressure');	
+		}
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing current pressure');	
+	}
+
+	$outcome_txt = ($tree->look_down( "_tag", "span", "class", qr{wx-pressure}))[0];
+	if ($outcome_txt) {
+		if ($outcome_txt->as_HTML =~ m/wx-pressure-(.*)\"><\/span/) {
+			if ($1 eq 'steady') {
+				$wetData{'pressureT'} = '~'; #~ is not displayed in all player text locations
+			}
+			elsif ($1 eq 'down') {
+				$wetData{'pressureT'} = '-';
+			}
+			elsif ($1 eq 'up') {
+				$wetData{'pressureT'} = '+'; #+ is not displayed in all player text locations
+			}
+			else {
+				$status = '-';
+				$log->warn('Error parsing current pressure trend');			
+			}
+		}
+		$log->error($wetData{'pressureT'});
+	}
+	else {
+		$status = '-';
+		$log->warn('Error parsing current pressure trend');	
+	}
+
 	#Now narrative
 	#Not applicable to all places, so don't warn if it doesn't exist
 	my $outcome_txt = ($tree->look_down( "_tag", "p", "class", "wx-value"))[0];
@@ -3568,7 +3609,6 @@ sub gotWeatherNow {  #Weather data was received
 		push(@WETdisplayItems1temp, $wetData{-1}{'forecastTOD'});
 		push(@WETdisplayItems2temp, localizeLongWeather($outcome_txt->as_text));
 	}
-
 
 #	my @matches;
 #	if (scalar (@matches) > 0) { #Make sure we got some good HTML to play with
@@ -3587,31 +3627,7 @@ sub gotWeatherNow {  #Weather data was received
 #				}
 #			}
 #		}
-				
-		#extra weather
-		#	#Pressure
-		#	my @step_down = $matches[1]->content_list;
-		#
-		#	if ($step_down[1] =~ m/(\d+.\d+)/) {
-		#		$wetData{'pressureIN'} = $1;
-		#		$wetData{'pressureMB'} = $1 * 33.8639;
-		#		$wetData{'pressureMB'} = int($wetData{'pressureMB'} + .5 * ($wetData{'pressureMB'} <=> 0)); #Funky round	
-#
-		#		$outcome_txt = $step_down[2]->as_HTML;
-		#		if ($outcome_txt =~ m/icon-pressure-(.*).gif/) {
-		#			if ($1 eq 'steady') {
-	      	#				$wetData{'pressureT'} = '~';
-	      	#			}
-	      	#			elsif ($1 eq 'down') {
-	      	#				$wetData{'pressureT'} = '-';
-	      	#			}
-	      	#			elsif ($1 eq 'up') {
-  		#				$wetData{'pressureT'} = '+';
-		#			}
-		#			else {
-		#				$status = '-';
-		#				$log->warn('Error parsing weather details popup - unknown pressure trend');
-		#			}
+
             
 
 #			# Nowcast narrative
