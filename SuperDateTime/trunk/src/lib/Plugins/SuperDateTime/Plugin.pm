@@ -18,7 +18,7 @@
 # The graphical weather icons and the code to support them are based on the WeatherTime screensaver written by Martin Rehfeld.
 #
 # VERSION HISTORY
-# 5.9.15   04/13/13 Ongoing updates to weather.com parsing
+# 5.9.16   04/13/13 Ongoing updates to weather.com parsing
 # 5.9.15b2 07/24/13 Ongoing updates to weather.com parsing
 # 5.9.15b1 03/17/13 Ongoing updates to weather.com parsing
 #                   Fixed NBA parsing (Thanks Steve)
@@ -203,7 +203,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 });
 
 use vars qw($VERSION);
-$VERSION = substr(q$Revision: 5.9.15 $,10);
+$VERSION = substr(q$Revision: 5.9.16 $,10);
 
 $Plugins::SuperDateTime::Plugin::apiVersion = 2.0;
 
